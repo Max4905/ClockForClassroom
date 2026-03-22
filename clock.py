@@ -1,17 +1,17 @@
-import tkinter as tk
-import threading
 import datetime
-import time
-import tkinter.simpledialog
-import tkinter.messagebox
-import os
 import json
+import os
+import threading
+import time
+import tkinter as tk
+import tkinter.messagebox
+import tkinter.simpledialog
+
+import about
+import randrom_generater
+import time_correction as time_correction_file
 from ask_reminder import ask_reminder_dialog
 from window_tools import center_window
-import time_correction as time_correction_file
-import randrom_generater
-
-# test
 
 w = tk.Tk()
 w.title("时钟")
@@ -430,7 +430,7 @@ def put_menu():
     tools_menu.add_command(label='随机数生成器',command=show_random)
     menu_bar.add_cascade(label='工具', menu=tools_menu)
     help_menu=tk.Menu(menu_bar, tearoff=0)
-    help_menu.add_command(label='关于本软件', command=lambda: tk.messagebox.showinfo('关于本软件',about_text))
+    help_menu.add_command(label='关于本软件', command=about.show_about)
     troubleshoot_menu = tk.Menu(help_menu, tearoff=0)
     troubleshoot_menu.add_command(label='重置窗口大小',command= lambda: w.geometry(''))
     troubleshoot_menu.add_command(label='立即保存配置文件',command=save_config)
