@@ -1,0 +1,20 @@
+{
+    "clock_font": [
+        "Consolas",
+        22
+    ],
+    "date_font": [
+        "等线",
+        16
+    ],
+    "reminder_font": [
+        "等线",
+        14
+    ],
+    "time_correction_seconds": 0,
+    "use_12_hrs_clock": true,
+    "show_seconds": true,
+    "string_reminder": "",
+    "clock_fg_color": "#000000",
+    "clock_bg_color": "#F0F0F0"
+}
