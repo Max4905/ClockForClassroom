@@ -1,0 +1,10 @@
+.idea/
+.venv/
+__pycache__/
+build/
+compiled/
+
+ask_reminder_history.txt
+reminder_history.txt
+clock.spec
+clock.json
