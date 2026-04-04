@@ -1,7 +1,6 @@
 import datetime
 import json
 import os
-import threading
 import time
 import tkinter as tk
 import tkinter.messagebox
@@ -46,6 +45,7 @@ encouraging_words = ["学习不是填充空桶，而是点燃火焰。",
 date_format_labels = ['%Y-%m-%d', '%y-%m-%d', '%Y/%m/%d', '%y/%m/%d', '%Y.%m.%d', '%m.%d', '%y%m%d', '%Y%m%d', '%m%d']
 font_size_options = ['22 16', '32 18', '36 20', '48 26', '72 36']
 clock_color_options = ['#000000 #F0F0F0', '#FFFFFF #000000', '#F0F0F0 #10382E', '#F0F0F0 #09426C']
+update_delay_choices = [100,500,1000,5000,10000,60000]
 
 # 默认配置
 default_clock_data = {
@@ -133,6 +133,7 @@ def on_closing():
     print('窗口关闭')
     exit()
 
+
 chosen_font_name = ()
 use_12_hour_clock = tk.BooleanVar(value=clock_data['use_12_hrs_clock'])
 show_seconds = tk.BooleanVar(value=clock_data['show_seconds'])
@@ -145,6 +146,7 @@ clock_string_reminder = tk.StringVar(value=clock_data['string_reminder'])
 current_window_mode = window_mode.get()
 window_close_action = tk.IntVar(value=0)
 save_config_before_exit = tk.BooleanVar(value=True)
+update_delay_ms = tk.IntVar(value=500)
 
 # 时间日期有关
 def get_current_time():
@@ -373,6 +375,10 @@ def put_menu():
     clock_mode_menu.add_checkbutton(label='使用12小时制', onvalue=True, offvalue=False, variable=use_12_hour_clock)
     clock_mode_menu.add_checkbutton(label='显示读秒', onvalue=True, offvalue=False, variable=show_seconds)
     clock_menu.add_cascade(label='时间格式设置', menu=clock_mode_menu)
+    update_delay_menu = tk.Menu(clock_menu, tearoff=0)
+    for i in update_delay_choices:
+        update_delay_menu.add_radiobutton(label=str(i),variable=update_delay_ms, value=i)
+    clock_menu.add_cascade(label='更新频率 (ms)', menu=update_delay_menu)
     date_mode_menu = tk.Menu(clock_menu, tearoff=0)
     for i in date_format_labels:
         date_mode_menu.add_radiobutton(label=i, variable=date_mode)
@@ -387,6 +393,7 @@ def put_menu():
     clock_menu.add_cascade(label='星期的表示方法', menu=week_mode_menu)
     clock_menu.add_separator()
     clock_menu.add_command(label='调整静态文本',command=lambda:change_string_reminder(clock_menu))
+    clock_menu.add_command(label='调整窗口标题', command=lambda: w.title(tkinter.simpledialog.askstring(title='调整窗口标题',prompt='在下方输入框里输入新的窗口标题。窗口标题不会被保存到配置文件中。',initialvalue=w.title(),parent=w)))
     clock_menu.add_separator()
     clock_menu.add_checkbutton(label='退出时保存设置', onvalue=True, offvalue=False, variable=save_config_before_exit)
     clock_menu.add_command(label='退出',command=on_closing)
@@ -441,25 +448,22 @@ def put_menu():
 put_menu()
 
 def refresh_clock_and_window():
-    global window_is_open
-    window_is_open = True
-    while window_is_open:
-        ctime = get_time_with_correction(use_12_hour_clock.get(),show_seconds.get())
-        current_date = get_current_date(format_type=date_mode.get())
-        weekday = get_weekday(format_type=weekday_mode.get())
-        date_str = current_date + ' ' + str(weekday)
+    current_time = get_time_with_correction(use_12_hour_clock.get(),show_seconds.get())
+    current_date = get_current_date(format_type=date_mode.get())
+    weekday = get_weekday(format_type=weekday_mode.get())
+    date_str = current_date + ' ' + str(weekday)
 
-        config_window_mode(window_mode.get(),view_menu)
-        config_font_sizes(time_label,date_label)
-        clock_data['use_12_hrs_clock']  = use_12_hour_clock.get()
-        clock_data['show_seconds'] = show_seconds.get()
+    config_window_mode(window_mode.get(),view_menu)
+    config_font_sizes(time_label,date_label)
+    clock_data['use_12_hrs_clock']  = use_12_hour_clock.get()
+    clock_data['show_seconds'] = show_seconds.get()
 
-        time_label.config(text=ctime)
-        date_label.config(text=date_str)
+    time_label.config(text=current_time)
+    date_label.config(text=date_str)
 
-        time.sleep(0.5)
+    w.after(update_delay_ms.get(),refresh_clock_and_window)
 
-threading.Thread(target=refresh_clock_and_window).start()
+refresh_clock_and_window()
 
 w.protocol("WM_DELETE_WINDOW", lambda: on_close_button(window_close_action))
 

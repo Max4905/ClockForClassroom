@@ -42,13 +42,11 @@ def ask_reminder_dialog(master: tk.Tk | tk.Toplevel, original_value: str = '') -
         if text not in lines:
             with open(history_file, 'a', encoding='utf-8') as f:
                 f.write(text + '\n')
-
     def load_history() -> list:
         if not os.path.exists(history_file):
             return []
         with open(history_file, 'r', encoding='utf-8') as f:
             return [line.rstrip('\n') for line in f]
-
     def open_history_dialog(parent, set_callback):
         hist_win = tk.Toplevel(parent)
         hist_win.title("历史记录")
@@ -148,6 +146,7 @@ def ask_reminder_dialog(master: tk.Tk | tk.Toplevel, original_value: str = '') -
     # -----------------------------------------
 
     w = tk.Toplevel(master)
+    w.title('更改静态文本')
     w.config(padx=10, pady=10)
     frame_text_entry = tk.Frame(w)
     tk.Label(frame_text_entry, text='输入的文本将会被显示到时钟窗口底部。\n不需要请留空以后按确定。\n多行文本分隔符请参阅下方菜单的选项。').pack(side='top')

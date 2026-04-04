@@ -31,14 +31,14 @@ def show_about():
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     # 插入 about_text 内容
-    about_text = '''Clock For Classroom v1.3
+    about_text = '''Clock For Classroom v1.3.1
 正式版 总计第8次更新
 
 关于开发者
 黄天敬泽
 Max490545149@outlook.com
 
-2026-03-22
+2026-03-31
 '''
     text_widget.insert(tk.END, about_text)
     text_widget.configure(state=tk.DISABLED)  # 设置为只读
