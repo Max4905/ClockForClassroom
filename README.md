@@ -1,6 +1,6 @@
 # Clock for Classroom —— 一款极其简洁的教室时钟软件
 
-<img title="" src="file:///E:/md_images/45d1ef34-3e92-4775-bffe-8e32f5584f0c.png" alt="45d1ef34-3e92-4775-bffe-8e32f5584f0c" data-align="center" style="zoom:67%;">
+<img width="466" height="218" alt="45d1ef34-3e92-4775-bffe-8e32f5584f0c" src="https://github.com/user-attachments/assets/160ff2da-0e22-49e9-b2d7-4f16d6f74692"  data-align="center" style="zoom:67%;">
 
 本软件可以在教室大屏幕上以大字号显示时间，同时可以在不更改系统时间的情况下校正时间，以匹配学校铃声。
 
@@ -41,15 +41,14 @@
    - 如果下载了onefile 版本，请将文件放到一个独立文件夹里。
    - 如果下载了 onedir 版本，请将压缩包里的clock文件夹解压出来。推荐放到硬盘根目录，但这不是必须的。
 
-3. 运行 clock.exe 。 
+3. 运行 clock.exe 。
 
 4. （非必要）按 Ctrl-C 复制clock.exe，然后在一个方便的位置“粘贴快捷方式”。
 
 ### 校准时间
 
 1. 从“时钟”菜单打开“校准时间”窗口。
-
-<img title="" src="file:///E:/md_images/3d3afab5-0ef9-478f-887a-eea686700318.png" alt="3d3afab5-0ef9-478f-887a-eea686700318" style="zoom:33%;">
+<img width="337" height="441" alt="3d3afab5-0ef9-478f-887a-eea686700318" src="https://github.com/user-attachments/assets/6b129f60-8a4c-4d36-9df2-e833224b135e" />
 
 2. 点击窗口底部的按钮，将时间向前调或者向后调（勾选“减小校正值”），直到第三个（加粗显示）的时间与实际时间一致。
 
