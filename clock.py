@@ -3,6 +3,7 @@ import json
 import os
 import time
 import tkinter as tk
+import tkinter.filedialog
 import tkinter.messagebox
 import tkinter.simpledialog
 
@@ -92,13 +93,13 @@ def validate_config(config):
     return True, "校验通过"
 
 
-config_file = './clock.json'
+CONFIG_FILE = 'clock.json'
 clock_data = default_clock_data.copy()  # 先设为默认值
 
 def load_config():
     global clock_data
     try:
-        with open(config_file, 'r', encoding='utf-8') as f:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             loaded_data = json.load(f)
 
         # 校验配置
@@ -108,21 +109,21 @@ def load_config():
             print("配置文件加载成功")
         else:
             tkinter.messagebox.showwarning("配置文件加载时出错",f"配置文件校验失败: {message}，将删除并重置")
-            os.remove(config_file)  # 删除损坏的配置文件
+            os.remove(CONFIG_FILE)  # 删除损坏的配置文件
             # 保持 clock_data 为默认值
     except FileNotFoundError:
         tkinter.messagebox.showinfo("无配置文件","配置文件不存在，使用默认配置")
         # 保持 clock_data 为默认值
     except (json.JSONDecodeError, OSError) as e:
         tkinter.messagebox.showwarning("配置文件加载时出错",f"读取配置文件时出错: {e}，将删除并重置")
-        if os.path.exists(config_file):
-            os.remove(config_file)
+        if os.path.exists(CONFIG_FILE):
+            os.remove(CONFIG_FILE)
         # 保持 clock_data 为默认值
 load_config()
 
 # 最后将当前配置写入文件（可选，如果希望立即生成默认配置文件）
 def save_config():
-    with open(config_file, 'w', encoding='utf-8') as f:
+    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(clock_data, f, indent=4, ensure_ascii=False)
 save_config()
 
@@ -272,11 +273,24 @@ def change_reminder_size():
     reminder_label.config(font=clock_data['reminder_font'])
 def change_window_title():
     global clock_data
-    new_title=tkinter.simpledialog.askstring(title='调整窗口标题',prompt='在下方输入框里输入新的窗口标题。窗口标题不会被保存到配置文件中。',initialvalue=w.title(), parent=w)
+    initial_value = w.title()
+    if w.title() == default_clock_data['window_title']:
+        initial_value='学者的时钟'
+    new_title=tkinter.simpledialog.askstring(title='调整窗口标题',prompt='在下方输入框里输入新的窗口标题。',initialvalue=initial_value, parent=w)
     if new_title is not None:
         w.title(new_title)
         clock_data['window_title'] = new_title
 
+# 配置文件操作
+def delete_config():
+    if tkinter.messagebox.askyesno('确认删除配置文件','即将删除配置文件。此操作不可逆。\n点击“是”继续。\n配置文件删除后，软件将退出。'):
+        os.remove(CONFIG_FILE)
+        on_closing()
+def save_config_as():
+    file = tkinter.filedialog.asksaveasfile(mode='w', defaultextension='.json', filetypes=(('json files', '*.json'),('txt files', '*.txt'),('all files', '*.*')))
+    if file is not None:
+        json.dump(clock_data, file, indent=4, ensure_ascii=False)
+        file.close()
 
 # 后台操作
 def config_window_mode(mode:int,view_menu:tk.Menu):
@@ -411,7 +425,13 @@ def put_menu():
     clock_menu.add_command(label='调整静态文本',command=lambda:change_string_reminder(clock_menu))
     clock_menu.add_command(label='调整窗口标题', command=change_window_title)
     clock_menu.add_separator()
-    clock_menu.add_checkbutton(label='退出时保存设置', onvalue=True, offvalue=False, variable=save_config_before_exit)
+    config_file_menu = tk.Menu(clock_menu, tearoff=0)
+    config_file_menu.add_checkbutton(label='退出时保存设置', onvalue=True, offvalue=False, variable=save_config_before_exit)
+    config_file_menu.add_command(label='立即保存配置文件',command=save_config)
+    config_file_menu.add_command(label='配置文件另存为', command=save_config_as)
+    # config_file_menu.add_separator()
+    # config_file_menu.add_command(label='删除配置文件', command=delete_config,activebackground='red')
+    clock_menu.add_cascade(label='配置文件操作', menu=config_file_menu)
     clock_menu.add_command(label='退出',command=on_closing)
     menu_bar.add_cascade(label='时钟', menu=clock_menu)
     view_menu = tk.Menu(menu_bar, tearoff=0)
@@ -456,7 +476,6 @@ def put_menu():
     help_menu.add_command(label='关于本软件', command=about.show_about)
     troubleshoot_menu = tk.Menu(help_menu, tearoff=0)
     troubleshoot_menu.add_command(label='重置窗口大小',command= lambda: w.geometry(''))
-    troubleshoot_menu.add_command(label='立即保存配置文件',command=save_config)
     # troubleshoot_menu.add_command(label='重新加载配置文件',command=load_config)
     help_menu.add_cascade(label='故障排除', menu=troubleshoot_menu)
     menu_bar.add_cascade(label='帮助', menu=help_menu)
