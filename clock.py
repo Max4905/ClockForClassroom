@@ -58,6 +58,7 @@ default_clock_data = {
     'string_reminder': '',
     'clock_fg_color': "#000000",
     'clock_bg_color': '#F0F0F0',
+    'window_close_action': 0
 }
 
 def validate_config(config):
@@ -72,6 +73,7 @@ def validate_config(config):
         'string_reminder':str,
         'clock_fg_color': str,
         'clock_bg_color': str,
+        'window_close_action': int
     }
     for key, expected_type in required_keys.items():
         if key not in config:
@@ -133,7 +135,6 @@ def on_closing():
     print('窗口关闭')
     exit()
 
-
 chosen_font_name = ()
 use_12_hour_clock = tk.BooleanVar(value=clock_data['use_12_hrs_clock'])
 show_seconds = tk.BooleanVar(value=clock_data['show_seconds'])
@@ -144,7 +145,7 @@ font_size = tk.StringVar(value=str(clock_data['clock_font'][1])+' '+str(clock_da
 clock_color = tk.StringVar(value=clock_data['clock_fg_color']+' '+clock_data['clock_bg_color'])
 clock_string_reminder = tk.StringVar(value=clock_data['string_reminder'])
 current_window_mode = window_mode.get()
-window_close_action = tk.IntVar(value=0)
+window_close_action = tk.IntVar(value=clock_data['window_close_action'])
 save_config_before_exit = tk.BooleanVar(value=True)
 update_delay_ms = tk.IntVar(value=500)
 
@@ -338,6 +339,8 @@ def on_close_button(action:tk.IntVar = window_close_action):
     # 3 ask
     # 4 nothing
 
+    clock_data['window_close_action'] = action.get()
+
     if action.get() == 0:
         on_closing()
     elif action.get() == 1:
@@ -346,6 +349,9 @@ def on_close_button(action:tk.IntVar = window_close_action):
         pass
     else:
         raise ValueError
+def sync_close_action(action:int):
+    global clock_data
+    clock_data['window_close_action'] = action
 
 # 工具
 def show_random():
@@ -406,11 +412,11 @@ def put_menu():
     view_menu.add_radiobutton(label='最大化窗口',variable=window_mode,value=4)
     view_menu.add_radiobutton(label='全屏模式',variable=window_mode,value=3)
     window_closing_menu = tk.Menu(view_menu, tearoff=0)
-    window_closing_menu.add_radiobutton(label='退出软件',variable=window_close_action,value=0)
-    window_closing_menu.add_radiobutton(label='最小化窗口',variable=window_close_action,value=1)
-    window_closing_menu.add_radiobutton(label='最小化到托盘',variable=window_close_action,value=2,state=tk.DISABLED)
-    window_closing_menu.add_radiobutton(label='询问',variable=window_close_action,value=3,state=tk.DISABLED)
-    window_closing_menu.add_radiobutton(label='无操作',variable=window_close_action,value=4)
+    window_closing_menu.add_radiobutton(label='退出软件',variable=window_close_action,value=0,command=lambda: sync_close_action(0))
+    window_closing_menu.add_radiobutton(label='最小化窗口',variable=window_close_action,value=1,command=lambda: sync_close_action(1))
+    window_closing_menu.add_radiobutton(label='最小化到托盘',variable=window_close_action,value=2,command=lambda: sync_close_action(2),state=tk.DISABLED)
+    window_closing_menu.add_radiobutton(label='询问',variable=window_close_action,value=3,command=lambda: sync_close_action(3),state=tk.DISABLED)
+    window_closing_menu.add_radiobutton(label='无操作',variable=window_close_action,value=4,command=lambda: sync_close_action(4))
     # window_closing_menu.add_separator()
     # window_closing_menu.add_checkbutton(label='禁止退出软件',variable=refuse_exit_action,onvalue=True,offvalue=False)
     view_menu.add_separator()
@@ -468,4 +474,3 @@ refresh_clock_and_window()
 w.protocol("WM_DELETE_WINDOW", lambda: on_close_button(window_close_action))
 
 tk.mainloop()
-
