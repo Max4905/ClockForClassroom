@@ -58,7 +58,8 @@ default_clock_data = {
     'string_reminder': '',
     'clock_fg_color': "#000000",
     'clock_bg_color': '#F0F0F0',
-    'window_close_action': 0
+    'window_close_action': 0,
+    'window_title': '时钟'
 }
 
 def validate_config(config):
@@ -73,7 +74,8 @@ def validate_config(config):
         'string_reminder':str,
         'clock_fg_color': str,
         'clock_bg_color': str,
-        'window_close_action': int
+        'window_close_action': int,
+        'window_title': str
     }
     for key, expected_type in required_keys.items():
         if key not in config:
@@ -148,6 +150,7 @@ current_window_mode = window_mode.get()
 window_close_action = tk.IntVar(value=clock_data['window_close_action'])
 save_config_before_exit = tk.BooleanVar(value=True)
 update_delay_ms = tk.IntVar(value=500)
+w.title(clock_data['window_title'])
 
 # 时间日期有关
 def get_current_time():
@@ -267,6 +270,13 @@ def change_reminder_size():
     new_size = ask_font_size(default_size=clock_data['reminder_font'][1],prompt='选择显示在时钟底部的静态文本的字号大小',max_font_size=48)
     clock_data['reminder_font']=('等线', new_size)
     reminder_label.config(font=clock_data['reminder_font'])
+def change_window_title():
+    global clock_data
+    new_title=tkinter.simpledialog.askstring(title='调整窗口标题',prompt='在下方输入框里输入新的窗口标题。窗口标题不会被保存到配置文件中。',initialvalue=w.title(), parent=w)
+    if new_title is not None:
+        w.title(new_title)
+        clock_data['window_title'] = new_title
+
 
 # 后台操作
 def config_window_mode(mode:int,view_menu:tk.Menu):
@@ -399,7 +409,7 @@ def put_menu():
     clock_menu.add_cascade(label='星期的表示方法', menu=week_mode_menu)
     clock_menu.add_separator()
     clock_menu.add_command(label='调整静态文本',command=lambda:change_string_reminder(clock_menu))
-    clock_menu.add_command(label='调整窗口标题', command=lambda: w.title(tkinter.simpledialog.askstring(title='调整窗口标题',prompt='在下方输入框里输入新的窗口标题。窗口标题不会被保存到配置文件中。',initialvalue=w.title(),parent=w)))
+    clock_menu.add_command(label='调整窗口标题', command=change_window_title)
     clock_menu.add_separator()
     clock_menu.add_checkbutton(label='退出时保存设置', onvalue=True, offvalue=False, variable=save_config_before_exit)
     clock_menu.add_command(label='退出',command=on_closing)
