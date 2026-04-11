@@ -61,7 +61,8 @@ default_clock_data = {
     'clock_fg_color': "#000000",
     'clock_bg_color': '#F0F0F0',
     'window_close_action': 0,
-    'window_title': '时钟'
+    'window_title': '时钟',
+    'alpha': 1.0
 }
 
 def validate_config(config):
@@ -77,7 +78,8 @@ def validate_config(config):
         'clock_fg_color': str,
         'clock_bg_color': str,
         'window_close_action': int,
-        'window_title': str
+        'window_title': str,
+        'alpha':float
     }
     for key, expected_type in required_keys.items():
         if key not in config:
@@ -153,6 +155,7 @@ window_close_action = tk.IntVar(value=clock_data['window_close_action'])
 save_config_before_exit = tk.BooleanVar(value=True)
 update_delay_ms = tk.IntVar(value=500)
 w.title(clock_data['window_title'])
+w.attributes('-alpha', clock_data['alpha'])
 
 # 时间日期有关
 def get_current_time():
@@ -283,6 +286,7 @@ def change_window_title():
         clock_data['window_title'] = new_title
 def change_window_alpha():
     global clock_data
+    #alpha 0-1 float
     alpha=widgets.ask_num.ask_number(w,'选择窗口透明度','使用下方滑块更改时钟主窗口的透明度(%)。','透明度',default=w.attributes('-alpha')*100,min_num=40,max_num=100)/100
     clock_data['alpha']=alpha
     w.attributes('-alpha',alpha)
