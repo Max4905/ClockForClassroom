@@ -10,12 +10,13 @@ import tkinter.simpledialog
 import about
 import randrom_generater
 import time_correction as time_correction_file
+import widgets.ask_num
 from ask_reminder import ask_reminder_dialog
 from window_tools import center_window
 
 w = tk.Tk()
 w.title("时钟")
-w.resizable(0,0)
+w.resizable(False,False)
 
 about_text ='''Clock For Classroom v1.2
 正式版 总计第7次更新
@@ -280,6 +281,11 @@ def change_window_title():
     if new_title is not None:
         w.title(new_title)
         clock_data['window_title'] = new_title
+def change_window_alpha():
+    global clock_data
+    alpha=widgets.ask_num.ask_number(w,'选择窗口透明度','使用下方滑块更改时钟主窗口的透明度(%)。','透明度',default=w.attributes('-alpha')*100,min_num=40,max_num=100)/100
+    clock_data['alpha']=alpha
+    w.attributes('-alpha',alpha)
 
 # 配置文件操作
 def delete_config():
@@ -468,6 +474,7 @@ def put_menu():
     view_menu.add_separator()
     view_menu.add_cascade(label='调整字号', menu=font_size_menu)
     view_menu.add_cascade(label='调整配色', menu=clock_color_menu)
+    view_menu.add_command(label='窗口透明度', command=change_window_alpha)
     menu_bar.add_cascade(label='显示', menu=view_menu)
     tools_menu = tk.Menu(menu_bar, tearoff=0)
     tools_menu.add_command(label='随机数生成器',command=show_random)
