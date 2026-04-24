@@ -537,7 +537,7 @@ def refresh_clock_and_window():
 
     w.after(update_delay_ms.get(),refresh_clock_and_window)
 
-config_window_mode(0)
+remove_schedule_frame()
 refresh_clock_and_window()
 
 w.protocol("WM_DELETE_WINDOW", lambda: on_close_button(window_close_action))
