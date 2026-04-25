@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import sys
 import time
 import tkinter as tk
 import tkinter.filedialog
@@ -17,6 +18,8 @@ from window_tools import center_window
 w = tk.Tk()
 w.title("时钟")
 w.resizable(0,0)
+
+w.tk.call('tk', 'scaling', w.tk.call('tk', 'scaling'))
 
 about_text ='''Clock For Classroom v1.2
 正式版 总计第7次更新
@@ -86,12 +89,6 @@ def validate_config(config):
         value = config[key]
         if not isinstance(value, expected_type):
             return False, f"键 {key} 的类型应为 {expected_type}，实际为 {type(value)}"
-        # 对于字体元组，进一步检查长度和元素类型
-        if key.endswith('_font'):
-            if len(value) != 2:
-                return False, f"字体配置 {key} 应为长度为2的序列，实际长度为 {len(value)}"
-            if not isinstance(value[1], int):
-                return False, f"字体大小必须为整数，但 {key}[1] 是 {type(value[1])}"
     return True, "校验通过"
 
 
@@ -117,17 +114,23 @@ def load_config():
         tkinter.messagebox.showinfo("无配置文件","配置文件不存在，使用默认配置")
         # 保持 clock_data 为默认值
     except (json.JSONDecodeError, OSError) as e:
-        tkinter.messagebox.showwarning("配置文件加载时出错",f"读取配置文件时出错: {e}，将删除并重置")
-        if os.path.exists(CONFIG_FILE):
-            os.remove(CONFIG_FILE)
+        tkinter.messagebox.showwarning("配置文件加载时出错",f"读取配置文件时出错: {e}")
+        # if os.path.exists(CONFIG_FILE):
+        #     os.remove(CONFIG_FILE)
         # 保持 clock_data 为默认值
 load_config()
 
 def read_class_schedule():
-    with open(SCHEDULE_FILE, 'r', encoding='utf-8') as f:
-        global schedule
-        loaded_data = json.load(f)
-        schedule = ClassSchedule(loaded_data)
+    try:
+        with open(SCHEDULE_FILE, 'r', encoding='utf-8') as f:
+            global schedule
+            loaded_data = json.load(f)
+            schedule = ClassSchedule(loaded_data)
+    except FileNotFoundError:
+        tkinter.messagebox.showinfo('文件不存在','找不到课表文件 class_schedule.json。无法显示课表。')
+        with open(SCHEDULE_FILE, 'w', encoding='utf-8') as f:
+            f.write('{}')
+        schedule = ClassSchedule(None)
 
 read_class_schedule()
 
@@ -299,7 +302,13 @@ def refresh_schedule_color(not_exist:bool=False):
     if schedule_label is not None:
         schedule_label.pack(side='right', fill='none', expand=False, pady=5)
     clock_frame.pack(anchor='center',fill='x',expand=True)
-
+def restart_application():
+    """重启整个时钟程序"""
+    if tk.messagebox.askyesno("重启确认", "重启会关闭当前窗口并重新启动程序。\n是否继续？"):
+        w.quit()
+        w.destroy()
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
 # 配置文件操作
 def delete_config():
@@ -515,6 +524,7 @@ def put_menu():
     help_menu.add_command(label='关于本软件', command=about.show_about)
     troubleshoot_menu = tk.Menu(help_menu, tearoff=0)
     troubleshoot_menu.add_command(label='重置窗口大小',command= lambda: w.geometry(''))
+    troubleshoot_menu.add_command(label='重启软件',command=restart_application)
     # troubleshoot_menu.add_command(label='重新加载配置文件',command=load_config)
     help_menu.add_cascade(label='故障排除', menu=troubleshoot_menu)
     menu_bar.add_cascade(label='帮助', menu=help_menu)
