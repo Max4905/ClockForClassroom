@@ -23,9 +23,15 @@ class ClassSchedule:
 
 
 if __name__ == '__main__':
-    schedule_dict = {'Monday':['a','b','c']}
+    schedule_dict = {
+  "Monday": ["语文", "英语", "政治", "数学", "体活", "[音乐]", "物理", "班会", "辅导"],
+  "Tuesday": ["语文", "数学", "英语", "阅表", "体育", "历史", "[美术]", "自习", "自习"],
+  "Wednesday": ["英语", "物理", "体育", "生物", "数学", "数拓", "地理", "语文", "自习"],
+  "Thursday": ["体育", "物理", "数学", "语文", "历史", "政治", "英听", "生物", "试官"],
+  "Friday": ["英语", "数学", "物理", "语文", "地理", "政治", "体育", "自习", "辅导"]
+}
     schedule_object = ClassSchedule(schedule_dict)
     print(schedule_object.get_current_schedule('Monday'))
     w = tk.Tk()
-    schedule_object.get_current_schedule_frame(w,'Monday').pack(side='right')
+    schedule_object.get_current_schedule_frame(w,'Tuesday').pack(side='right')
     w.mainloop()

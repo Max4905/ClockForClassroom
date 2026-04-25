@@ -11,6 +11,7 @@ import about
 import randrom_generater
 import time_correction as time_correction_file
 from ask_reminder import ask_reminder_dialog
+from class_schedule import ClassSchedule
 from window_tools import center_window
 
 w = tk.Tk()
@@ -47,6 +48,7 @@ date_format_labels = ['%Y-%m-%d', '%y-%m-%d', '%Y/%m/%d', '%y/%m/%d', '%Y.%m.%d'
 font_size_options = ['22 16', '32 18', '36 20', '48 26', '72 36']
 clock_color_options = ['#000000 #F0F0F0', '#FFFFFF #000000', '#F0F0F0 #10382E', '#F0F0F0 #09426C']
 update_delay_choices = [100,500,1000,5000,10000,60000]
+SCHEDULE_FILE = './class_schedule.json'
 
 # 默认配置
 default_clock_data = {
@@ -120,6 +122,14 @@ def load_config():
             os.remove(CONFIG_FILE)
         # 保持 clock_data 为默认值
 load_config()
+
+def read_class_schedule():
+    with open(SCHEDULE_FILE, 'r', encoding='utf-8') as f:
+        global schedule
+        loaded_data = json.load(f)
+        schedule = ClassSchedule(loaded_data)
+
+read_class_schedule()
 
 # 最后将当前配置写入文件（可选，如果希望立即生成默认配置文件）
 def save_config():
@@ -386,9 +396,11 @@ clock_frame = tk.Frame(clock_bg_frame, bg=clock_data['clock_bg_color'])
 time_label = tk.Label(clock_frame, text="Time", font=clock_data['clock_font'], fg=clock_data['clock_fg_color'], bg=clock_data['clock_bg_color'])
 date_label = tk.Label(clock_frame, text="Date", font=clock_data['date_font'], fg=clock_data['clock_fg_color'], bg=clock_data['clock_bg_color'])
 reminder_label = tk.Label(clock_frame, text="Reminder", font=clock_data['reminder_font'], textvariable=clock_string_reminder, fg=clock_data['clock_fg_color'], bg=clock_data['clock_bg_color'])
+schedule_label = schedule.get_current_schedule_frame(master=clock_frame,weekday=get_weekday(format_type='english'))
 # reminder_label=tk.Label()
 time_label.pack(anchor='center',fill='x',expand=True,pady=(0,5))
 date_label.pack(anchor='center',fill='x',expand=True,pady=(0,5))
+schedule_label.pack(anchor='center',fill='x',expand=True,pady=(0,5))
 if clock_string_reminder.get() != '':
     reminder_label.pack(anchor='center', fill='x',expand=True)
 clock_frame.pack(anchor='center',fill='x',expand=True)
