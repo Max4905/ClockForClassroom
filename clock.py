@@ -290,6 +290,16 @@ def change_window_title():
     if new_title is not None:
         w.title(new_title)
         clock_data['window_title'] = new_title
+def refresh_schedule_color(not_exist:bool=False):
+    global schedule_label
+    if not not_exist:
+        clock_frame.pack_forget()
+        schedule_label.destroy()
+    schedule_label = schedule.get_current_schedule_frame(master=clock_bg_frame,weekday=get_weekday(format_type='english'),fg_color=clock_data['clock_fg_color'],bg_color=clock_data['clock_bg_color'],padx=15)
+    if schedule_label is not None:
+        schedule_label.pack(side='right', fill='none', expand=False, pady=5)
+    clock_frame.pack(anchor='center',fill='x',expand=True)
+
 
 # 配置文件操作
 def delete_config():
@@ -303,7 +313,7 @@ def save_config_as():
         file.close()
 
 # 后台操作
-def config_window_mode(mode:int,view_menu:tk.Menu):
+def config_window_mode(mode:int,view_menu:tk.Menu|None = None):
     # 0 normal
     # 1 top
     # 2 top and hide title
@@ -318,7 +328,8 @@ def config_window_mode(mode:int,view_menu:tk.Menu):
             w.state('normal')
             w.overrideredirect(False)
             w.resizable(0,0)
-            view_menu.entryconfig(7, state=tk.NORMAL)
+            if view_menu is not None:
+                view_menu.entryconfig(7, state=tk.NORMAL)
         if mode == 0:
             reset_window_mode()
         elif mode == 1:
@@ -328,7 +339,8 @@ def config_window_mode(mode:int,view_menu:tk.Menu):
             reset_window_mode()
             w.attributes('-topmost', True)
             w.overrideredirect(True)
-            view_menu.entryconfig(7,state=tk.DISABLED)
+            if view_menu is not None:
+                view_menu.entryconfig(7, state=tk.DISABLED)
         elif mode == 3:
             reset_window_mode()
             w.attributes('-fullscreen', True)
@@ -339,6 +351,10 @@ def config_window_mode(mode:int,view_menu:tk.Menu):
             w.overrideredirect(False)
         else:
             raise ValueError
+        if mode == 3 or mode == 4:
+            place_schedule_frame()
+        else:
+            remove_schedule_frame()
 def config_font_sizes(in_time_label:tk.Label, in_date_label:tk.Label):
     if in_time_label['font'][1] != clock_data['clock_font'][1]:
         in_time_label.config(font=clock_data['clock_font'])
@@ -357,6 +373,7 @@ def config_clock_color(fg:str,bg:str):
         date_label.config(bg=clock_data['clock_bg_color'])
         reminder_label.config(bg=clock_data['clock_bg_color'])
         clock_frame.config(bg=clock_data['clock_bg_color'])
+    refresh_schedule_color()
 
 
 # 手动函数
@@ -387,6 +404,17 @@ def sync_close_action(action:int):
     global clock_data
     clock_data['window_close_action'] = action
 
+def remove_schedule_frame():
+    global schedule_label
+    if schedule_label is not None:
+        schedule_label.pack_forget()
+def place_schedule_frame():
+    global schedule_label
+    if schedule_label is not None:
+        clock_frame.pack_forget()
+        schedule_label.pack(side='right', fill='none', expand=False, pady=5)
+        clock_frame.pack(anchor='center', fill='x', expand=True)
+
 # 工具
 def show_random():
     randrom_generater.RandomWindow(w)
@@ -396,13 +424,12 @@ clock_frame = tk.Frame(clock_bg_frame, bg=clock_data['clock_bg_color'])
 time_label = tk.Label(clock_frame, text="Time", font=clock_data['clock_font'], fg=clock_data['clock_fg_color'], bg=clock_data['clock_bg_color'])
 date_label = tk.Label(clock_frame, text="Date", font=clock_data['date_font'], fg=clock_data['clock_fg_color'], bg=clock_data['clock_bg_color'])
 reminder_label = tk.Label(clock_frame, text="Reminder", font=clock_data['reminder_font'], textvariable=clock_string_reminder, fg=clock_data['clock_fg_color'], bg=clock_data['clock_bg_color'])
-schedule_label = schedule.get_current_schedule_frame(master=clock_frame,weekday=get_weekday(format_type='english'))
-# reminder_label=tk.Label()
+
 time_label.pack(anchor='center',fill='x',expand=True,pady=(0,5))
 date_label.pack(anchor='center',fill='x',expand=True,pady=(0,5))
-schedule_label.pack(anchor='center',fill='x',expand=True,pady=(0,5))
 if clock_string_reminder.get() != '':
     reminder_label.pack(anchor='center', fill='x',expand=True)
+refresh_schedule_color(True)
 clock_frame.pack(anchor='center',fill='x',expand=True)
 clock_bg_frame.pack(expand=True, anchor="center", fill='both')
 
@@ -448,11 +475,11 @@ def put_menu():
     menu_bar.add_cascade(label='时钟', menu=clock_menu)
     view_menu = tk.Menu(menu_bar, tearoff=0)
     # noinspection PyTypeChecker
-    view_menu.add_radiobutton(label='普通窗口',variable=window_mode,value=0)
-    view_menu.add_radiobutton(label='置顶窗口',variable=window_mode,value=1)
-    view_menu.add_radiobutton(label='桌面挂件',variable=window_mode,value=2)
-    view_menu.add_radiobutton(label='最大化窗口',variable=window_mode,value=4)
-    view_menu.add_radiobutton(label='全屏模式',variable=window_mode,value=3)
+    view_menu.add_radiobutton(label='普通窗口',variable=window_mode,value=0,command=lambda: config_window_mode(window_mode.get(),view_menu))
+    view_menu.add_radiobutton(label='置顶窗口',variable=window_mode,value=1,command=lambda: config_window_mode(window_mode.get(),view_menu))
+    view_menu.add_radiobutton(label='桌面挂件',variable=window_mode,value=2,command=lambda: config_window_mode(window_mode.get(),view_menu))
+    view_menu.add_radiobutton(label='最大化窗口',variable=window_mode,value=4,command=lambda: config_window_mode(window_mode.get(),view_menu))
+    view_menu.add_radiobutton(label='全屏模式',variable=window_mode,value=3,command=lambda: config_window_mode(window_mode.get(),view_menu))
     window_closing_menu = tk.Menu(view_menu, tearoff=0)
     window_closing_menu.add_radiobutton(label='退出软件',variable=window_close_action,value=0,command=lambda: sync_close_action(0))
     window_closing_menu.add_radiobutton(label='最小化窗口',variable=window_close_action,value=1,command=lambda: sync_close_action(1))
@@ -500,7 +527,7 @@ def refresh_clock_and_window():
     weekday = get_weekday(format_type=weekday_mode.get())
     date_str = current_date + ' ' + str(weekday)
 
-    config_window_mode(window_mode.get(),view_menu)
+    # config_window_mode(window_mode.get(),view_menu)
     config_font_sizes(time_label,date_label)
     clock_data['use_12_hrs_clock']  = use_12_hour_clock.get()
     clock_data['show_seconds'] = show_seconds.get()
@@ -510,6 +537,7 @@ def refresh_clock_and_window():
 
     w.after(update_delay_ms.get(),refresh_clock_and_window)
 
+config_window_mode(0)
 refresh_clock_and_window()
 
 w.protocol("WM_DELETE_WINDOW", lambda: on_close_button(window_close_action))
