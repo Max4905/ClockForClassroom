@@ -364,6 +364,7 @@ def config_window_mode(mode:int,view_menu:tk.Menu|None = None):
             place_schedule_frame()
         else:
             remove_schedule_frame()
+        window_mode.set(mode)
 def config_font_sizes(in_time_label:tk.Label, in_date_label:tk.Label):
     if in_time_label['font'][1] != clock_data['clock_font'][1]:
         in_time_label.config(font=clock_data['clock_font'])
@@ -517,6 +518,11 @@ def put_menu():
     view_menu.add_cascade(label='调整字号', menu=font_size_menu)
     view_menu.add_cascade(label='调整配色', menu=clock_color_menu)
     menu_bar.add_cascade(label='显示', menu=view_menu)
+    schedule_menu = tk.Menu(menu_bar, tearoff=0)
+    schedule_menu.add_radiobutton(label='最大化窗口',variable=window_mode,value=4,command=lambda: config_window_mode(window_mode.get(),view_menu))
+    schedule_menu.add_command(label='显示课表',command=place_schedule_frame)
+    schedule_menu.add_command(label='隐藏课表',command=remove_schedule_frame)
+    menu_bar.add_cascade(label='课表',menu=schedule_menu)
     tools_menu = tk.Menu(menu_bar, tearoff=0)
     tools_menu.add_command(label='随机数生成器',command=show_random)
     menu_bar.add_cascade(label='工具', menu=tools_menu)
