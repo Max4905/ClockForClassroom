@@ -13,13 +13,22 @@ class ClassSchedule:
         else:
             return None
     def get_current_schedule_frame(self, master:tk.Tk|tk.Toplevel|tk.Frame, weekday:typing.Literal['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'], padx:int=5,pady:int=5,fg_color:str= '#000000', bg_color:str= '#F0F0F0', font:tuple[str,int]=('等线','18')) -> tk.Frame | None:
+        listed_font = list(font)
+        italic_font=tuple(list(font)+['italic'])
+        bold_font=tuple(list(font)+['bold'])
         if self.schedule is None:
             return None
         current_schedule = self.get_current_schedule(weekday)
         if current_schedule:
             frame = tk.Frame(master=master, bg=bg_color)
             for i in current_schedule:
-                tk.Label(frame, text=i, fg=fg_color, bg=bg_color, font=font,padx=padx,pady=pady).pack(side='top')
+                current_font = font
+                if '*' in i:
+                    current_font=italic_font
+                elif '^' in i:
+                    current_font=bold_font
+                t=i.replace('*','').replace('^','')
+                tk.Label(frame, text=t, fg=fg_color, bg=bg_color, font=current_font,padx=padx,pady=pady).pack(side='top')
             return frame
         else:
             return None
