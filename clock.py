@@ -15,6 +15,10 @@ from ask_reminder import ask_reminder_dialog
 from class_schedule import ClassSchedule
 from window_tools import center_window
 
+DEBUG=False
+if '--debug' in sys.argv:
+    DEBUG = True
+
 w = tk.Tk()
 w.title("时钟")
 w.resizable(0,0)
@@ -361,7 +365,7 @@ def ask_font_size(default_size:int= 20, title:str = '选择字号', prompt:str =
     font_size_win.wait_window()
     return font_size
 
-# 菜单触发的非窗口操作
+# 菜单触发的操作
 def change_window_alpha():
     global clock_data
     #alpha 0-1 float
@@ -425,6 +429,14 @@ def restart_application():
         w.destroy()
         python = sys.executable
         os.execl(python, python, *sys.argv)
+def exec_python_command():
+    code=tkinter.simpledialog.askstring('执行命令','输入命令以运行。此功能仅供调试使用。')
+    if code is not None:
+        try:
+            exec(code)
+        except Exception as e:
+            tkinter.messagebox.showerror('出现错误',e)
+
 
 # 配置文件操作
 def delete_config():
@@ -644,15 +656,21 @@ def put_menu():
     schedule_menu.add_command(label='有关课表的帮助', command=lambda: tkinter.messagebox.showinfo('帮助信息',class_schedule.schedule_help_message))
     menu_bar.add_cascade(label='课表',menu=schedule_menu)
     tools_menu = tk.Menu(menu_bar, tearoff=0)
-    tools_menu.add_command(label='随机数生成器',command=show_random)
+    tools_menu.add_command(label='随机数生成器',command=show_random,state=tk.DISABLED)
     menu_bar.add_cascade(label='工具', menu=tools_menu)
     help_menu=tk.Menu(menu_bar, tearoff=0)
     help_menu.add_command(label='关于本软件', command=about.show_about)
+    if DEBUG:
+        help_menu.add_separator()
     troubleshoot_menu = tk.Menu(help_menu, tearoff=0)
     troubleshoot_menu.add_command(label='重置窗口大小',command= lambda: w.geometry(''))
     troubleshoot_menu.add_command(label='重启软件',command=restart_application)
     # troubleshoot_menu.add_command(label='重新加载配置文件',command=load_config)
     help_menu.add_cascade(label='故障排除', menu=troubleshoot_menu)
+    if DEBUG:
+        debug_menu = tk.Menu(help_menu, tearoff=0)
+        debug_menu.add_command(label='运行命令',command=exec_python_command)
+        help_menu.add_cascade(label='调试',menu=debug_menu)
     menu_bar.add_cascade(label='帮助', menu=help_menu)
     # menu_bar.add_command(label='关于', command=lambda:tkinter.messagebox.showinfo('关于本软件',about_text))
 put_menu()
