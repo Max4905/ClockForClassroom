@@ -1,10 +1,22 @@
 import tkinter as tk
+import tkinter.messagebox
 import typing
-
 
 class ClassSchedule:
     def __init__(self,schedule:dict|None):
         self.schedule=schedule
+        if self.schedule is not None:
+            try:
+                for key, value in self.schedule.items():
+                    if not isinstance(key, str):
+                        raise TypeError(f"dict key {key!r} is not str")
+                    if not isinstance(value, list):
+                        raise TypeError(f"value for key {key!r} is not list")
+                    for item in value:
+                        if not isinstance(item, str):
+                            raise TypeError(f"list element {item!r} is not str")
+            except TypeError as e:
+                tkinter.messagebox.showerror('读取课表文件时出错','未被预期的json结果。检查文件内容后重试。'+str(e))
     def get_current_schedule(self,weekday:typing.Literal['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']) -> list|None :
         if self.schedule is None:
             return None
@@ -33,18 +45,15 @@ class ClassSchedule:
         else:
             return None
 
+schedule_help_message = '''课表功能帮助信息
+ - 文件的格式
+文件名为 class_schedule.json，在与程序同一文件夹下。
+使用json格式，星期的英文名作为key，课程名称的列表作为value。
 
+ - 字体样式
+在课程名称前面添加*，应用斜体；
+在课程名称前面添加^，应用粗体。
 
-if __name__ == '__main__':
-    schedule_dict = {
-  "Monday": ["语文", "英语", "政治", "数学", "体活", "[音乐]", "物理", "班会", "辅导"],
-  "Tuesday": ["语文", "数学", "英语", "阅表", "体育", "历史", "[美术]", "自习", "自习"],
-  "Wednesday": ["英语", "物理", "体育", "生物", "数学", "数拓", "地理", "语文", "自习"],
-  "Thursday": ["体育", "物理", "数学", "语文", "历史", "政治", "英听", "生物", "试官"],
-  "Friday": ["英语", "数学", "物理", "语文", "地理", "政治", "体育", "自习", "辅导"]
-}
-    schedule_object = ClassSchedule(schedule_dict)
-    print(schedule_object.get_current_schedule('Monday'))
-    w = tk.Tk()
-    schedule_object.get_current_schedule_frame(w,'Tuesday').pack(side='right')
-    w.mainloop()
+ - 无法正常读取
+检查是否使用了中文引号、逗号。
+ '''

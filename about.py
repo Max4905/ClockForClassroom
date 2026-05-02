@@ -31,14 +31,16 @@ def show_about():
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     # 插入 about_text 内容
-    about_text = '''Clock For Classroom v1.4.0
-正式版 总计第9次更新
+    about_text = '''Clock For Classroom v1.6.0
+预览版 总计第11次更新
+
+此版本存在未解决的bug，但是不影响使用。
 
 关于开发者
 黄天敬泽
 Max490545149@outlook.com
 
-2026-04-06
+2026-04-26
 '''
     text_widget.insert(tk.END, about_text)
     text_widget.configure(state=tk.DISABLED)  # 设置为只读
@@ -65,12 +67,12 @@ Max490545149@outlook.com
     # 说明文字（不可点击）
     desc_label = tk.Label(
         links_frame,
-        text="如果连安卓都变得封闭，那么移动设备将不再拥有软件自由。",
+        text="如果连安卓都变得封闭，那么移动设备将不再拥有软件自由。\nGoogle 新规要求开发者上传身份证件才能分发 Android 应用，独立开发者和小众应用将受冲击。\n",
         font=("微软雅黑", 10),
         wraplength=500,
         justify=tk.LEFT
     )
-    desc_label.pack(anchor=tk.W, pady=(20, 5))
+    desc_label.pack(anchor=tk.W, pady=(0, 5))
 
     # Keep Android Open 链接（可点击，带下划线）
     keep_label = tk.Label(
@@ -80,7 +82,7 @@ Max490545149@outlook.com
         cursor="hand2",
         font=("微软雅黑", 10, "underline")   # 添加下划线
     )
-    keep_label.pack(anchor=tk.W, pady=5)
+    keep_label.pack(anchor=tk.W)
     keep_label.bind("<Button-1>", lambda e: webbrowser.open("https://keepandroidopen.org/zh-CN/"))
 
     # 关闭按钮

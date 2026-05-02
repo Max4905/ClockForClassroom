@@ -1,6 +1,4 @@
 import datetime
-import json
-import os
 import sys
 import time
 import tkinter as tk
@@ -9,8 +7,10 @@ import tkinter.messagebox
 import tkinter.simpledialog
 
 import about
+import class_schedule
 import randrom_generater
 import time_correction as time_correction_file
+import widgets.ask_num
 from ask_reminder import ask_reminder_dialog
 from class_schedule import ClassSchedule
 from window_tools import center_window
@@ -21,31 +21,6 @@ w.resizable(0,0)
 
 w.tk.call('tk', 'scaling', w.tk.call('tk', 'scaling'))
 
-about_text ='''Clock For Classroom v1.2
-正式版 总计第7次更新
-
-关于开发者
-黄天敬泽
-Max490545149@outlook.com
-
-2026-03-15
-'''
-
-encouraging_words = ["学习不是填充空桶，而是点燃火焰。",
-                     "拥有液泡的力量，胜利是必然的！",
-                     "拥有液泡的力量，胜利是必然的！",
-                     "这是计划的一部分。",
-                     "专注当下，让每一分钟的学习都产生价值。",
-                     "学习如同登山，过程或许艰难，但山顶的风景值得一切。",
-                     "今天的汗水，浇灌明天的果实。",
-                     "给岁月以文明，而不是给文明以岁月。",
-                     "只送大脑。",
-                     "弱小和无知不是生存的障碍，傲慢才是。",
-                     "弱小和无知不是生存的障碍，傲慢才是。",
-                     "前进，不择手段地前进！",
-                     "快跑。傻孩子们，快跑啊——",
-                     "藏好自己，做好清理。",
-                     "\"自然选择\"号，前进四！"]
 
 date_format_labels = ['%Y-%m-%d', '%y-%m-%d', '%Y/%m/%d', '%y/%m/%d', '%Y.%m.%d', '%m.%d', '%y%m%d', '%Y%m%d', '%m%d']
 font_size_options = ['22 16', '32 18', '36 20', '48 26', '72 36']
@@ -68,57 +43,9 @@ default_clock_data = {
     'window_title': '时钟'
 }
 
-def validate_config(config):
-    """验证配置是否合法，返回 (是否合法, 错误信息)"""
-    required_keys = {
-        'clock_font': (list, tuple),
-        'date_font': (list, tuple),
-        'reminder_font': (list, tuple),
-        'time_correction_seconds': (int, float),
-        'use_12_hrs_clock': bool,
-        'show_seconds': bool,
-        'string_reminder':str,
-        'clock_fg_color': str,
-        'clock_bg_color': str,
-        'window_close_action': int,
-        'window_title': str
-    }
-    for key, expected_type in required_keys.items():
-        if key not in config:
-            return False, f"缺少必要键: {key}"
-        value = config[key]
-        if not isinstance(value, expected_type):
-            return False, f"键 {key} 的类型应为 {expected_type}，实际为 {type(value)}"
-    return True, "校验通过"
-
 
 CONFIG_FILE = 'clock.json'
 clock_data = default_clock_data.copy()  # 先设为默认值
-
-def load_config():
-    global clock_data
-    try:
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            loaded_data = json.load(f)
-
-        # 校验配置
-        is_valid, message = validate_config(loaded_data)
-        if is_valid:
-            clock_data = {**default_clock_data, **loaded_data}  # 合并，缺失项用默认值
-            print("配置文件加载成功")
-        else:
-            tkinter.messagebox.showwarning("配置文件加载时出错",f"配置文件校验失败: {message}，将删除并重置")
-            os.remove(CONFIG_FILE)  # 删除损坏的配置文件
-            # 保持 clock_data 为默认值
-    except FileNotFoundError:
-        tkinter.messagebox.showinfo("无配置文件","配置文件不存在，使用默认配置")
-        # 保持 clock_data 为默认值
-    except (json.JSONDecodeError, OSError) as e:
-        tkinter.messagebox.showwarning("配置文件加载时出错",f"读取配置文件时出错: {e}")
-        # if os.path.exists(CONFIG_FILE):
-        #     os.remove(CONFIG_FILE)
-        # 保持 clock_data 为默认值
-load_config()
 
 def read_class_schedule():
     try:
@@ -131,22 +58,205 @@ def read_class_schedule():
         with open(SCHEDULE_FILE, 'w', encoding='utf-8') as f:
             f.write('{}')
         schedule = ClassSchedule(None)
+    except json.JSONDecodeError as e:
+        tkinter.messagebox.showerror('文件格式错误','无法正确读取课表文件。检查json语法，然后再试一次。')
+        schedule = ClassSchedule(None)
+    except Exception as e:
+        tkinter.messagebox.showerror('发生错误','未知错误。'+str(e))
+        schedule = ClassSchedule(None)
 
 read_class_schedule()
 
-# 最后将当前配置写入文件（可选，如果希望立即生成默认配置文件）
-def save_config():
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-        json.dump(clock_data, f, indent=4, ensure_ascii=False)
-save_config()
+
+required_keys = {
+        'clock_font': (list, tuple),
+        'date_font': (list, tuple),
+        'reminder_font': (list, tuple),
+        'time_correction_seconds': (int, float),
+        'use_12_hrs_clock': bool,
+        'show_seconds': bool,
+        'string_reminder':str,
+        'clock_fg_color': str,
+        'clock_bg_color': str,
+        'window_close_action': int,
+        'window_title': str
+}
+
+import json
+import os
+from typing import Any, Dict, Optional, Callable, Union
+
+class ConfigManager:
+    """
+    配置管理器，提供默认值、类型校验和文件持久化。
+
+    用法:
+        default = {"volume": 70, "theme": "dark"}
+        type_rules = {"volume": int, "theme": str}
+        config = ConfigManager("settings.json", default, type_rules)
+        print(config["volume"])          # 70
+        config["volume"] = 80            # 自动保存（可选）
+        config.save()                    # 手动保存
+    """
+
+    def __init__(
+        self,
+        file_path: str,
+        default_config: Dict[str, Any],
+        type_rules: Optional[Dict[str, Union[type, Callable]]] = None,
+        auto_save: bool = False
+    ):
+        """
+        参数:
+            file_path: 配置文件路径
+            default_config: 默认配置字典（所有键的默认值）
+            type_rules: 类型规则字典，键为配置项名，值为期望的类型或校验函数
+            auto_save: 每次修改后是否自动保存到文件
+        """
+        self.file_path = file_path
+        self.default_config = default_config.copy()
+        self.type_rules = type_rules or {}
+        self.auto_save = auto_save
+        self._data = self.default_config.copy()
+        self.load()
+
+    # -------------------- 核心方法 --------------------
+    def load(self) -> None:
+        """从文件加载配置，合并默认值并进行类型校验"""
+        if not os.path.exists(self.file_path):
+            return
+
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as f:
+                loaded = json.load(f)
+
+            if not isinstance(loaded, dict):
+                raise ValueError("配置文件根内容不是字典")
+
+            # 合并：用户配置覆盖默认值
+            merged = {**self.default_config, **loaded}
+            # 类型校验和清理
+            validated = self._validate(merged)
+            self._data = validated
+        except (json.JSONDecodeError, OSError, ValueError) as e:
+            print(f"加载配置文件失败: {e}，将使用默认配置")
+
+    def save(self) -> bool:
+        """将当前配置保存到文件，返回是否成功"""
+        try:
+            with open(self.file_path, 'w', encoding='utf-8') as f:
+                json.dump(self._data, f, indent=4, ensure_ascii=False)
+            return True
+        except OSError as e:
+            print(f"保存配置文件失败: {e}")
+            return False
+
+    def saveas(self,file):
+        def save(self) -> bool:
+            """将当前配置保存到文件，返回是否成功"""
+            try:
+                with open(file, 'w', encoding='utf-8') as f:
+                    json.dump(self._data, f, indent=4, ensure_ascii=False)
+                return True
+            except OSError as e:
+                print(f"保存配置文件失败: {e}")
+                return False
+
+    def _validate(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        根据 type_rules 校验配置项，返回清洗后的字典。
+        - 如果值类型不符，使用默认值替换并发出警告。
+        - 对于缺失的必要键，自动从默认配置补充。
+        """
+        validated = {}
+        # 先确保所有默认键都存在
+        for key, default_value in self.default_config.items():
+            if key in data:
+                value = data[key]
+            else:
+                value = default_value
+
+            # 类型检查
+            if key in self.type_rules:
+                rule = self.type_rules[key]
+                if isinstance(rule, type):
+                    if not isinstance(value, rule):
+                        print(f"警告: 配置项 '{key}' 应为 {rule.__name__} 类型，实际为 {type(value).__name__}，使用默认值 {default_value}")
+                        value = default_value
+                elif callable(rule):  # 自定义校验函数，应返回 (是否有效, 修正后的值)
+                    try:
+                        is_valid, corrected = rule(value)
+                        if not is_valid:
+                            print(f"警告: 配置项 '{key}' 校验失败，使用默认值 {default_value}")
+                            value = default_value
+                        else:
+                            value = corrected
+                    except Exception:
+                        print(f"警告: 配置项 '{key}' 校验函数异常，使用默认值 {default_value}")
+                        value = default_value
+            validated[key] = value
+
+        # 额外处理用户配置中多余的合法项目（可选，这里直接忽略）
+        return validated
+
+    # -------------------- 字典接口 --------------------
+    def __getitem__(self, key: str) -> Any:
+        return self._data[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        # 可选：对单个值进行类型检查
+        if key in self.type_rules:
+            rule = self.type_rules[key]
+            if isinstance(rule, type) and not isinstance(value, rule):
+                raise TypeError(f"配置项 '{key}' 应为 {rule.__name__} 类型，无法设置为 {type(value).__name__}")
+        self._data[key] = value
+        if self.auto_save:
+            self.save()
+
+    def __delitem__(self, key: str) -> None:
+        # 删除键会恢复默认值（而非真正删除）
+        if key in self.default_config:
+            self._data[key] = self.default_config[key]
+        else:
+            del self._data[key]
+        if self.auto_save:
+            self.save()
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._data
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __repr__(self) -> str:
+        return f"ConfigManager({self.file_path})"
+
+    # -------------------- 额外便捷方法 --------------------
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._data.get(key, default)
+
+    def update(self, other: Dict[str, Any]) -> None:
+        """批量更新配置，会进行类型校验"""
+        for k, v in other.items():
+            self[k] = v
+
+    def reset_to_default(self) -> None:
+        """重置所有配置到默认值"""
+        self._data = self.default_config.copy()
+        if self.auto_save:
+            self.save()
+
+    def reload(self) -> None:
+        """重新从文件加载（放弃未保存的更改）"""
+        self.load()
+clock_data = ConfigManager(CONFIG_FILE,default_clock_data,required_keys)
 
 window_is_open = True
 def on_closing():
     global window_is_open
     window_is_open = False
     if save_config_before_exit.get():
-        with open('./clock.json', 'w', encoding='utf-8') as f:
-            json.dump(clock_data, f, indent=4, ensure_ascii=False)
+        clock_data.save()
     w.destroy()
     print('窗口关闭')
     exit()
@@ -252,6 +362,12 @@ def ask_font_size(default_size:int= 20, title:str = '选择字号', prompt:str =
     return font_size
 
 # 菜单触发的非窗口操作
+def change_window_alpha():
+    global clock_data
+    #alpha 0-1 float
+    alpha=widgets.ask_num.ask_number(w,'选择窗口透明度','使用下方滑块更改时钟主窗口的透明度(%)。','透明度',default=w.attributes('-alpha')*100,min_num=40,max_num=100)/100
+    clock_data['alpha']=alpha
+    w.attributes('-alpha',alpha)
 def change_clock_font_size():
     global clock_data
     new_font_size = ask_font_size(clock_data['clock_font'][1],prompt='选择时间部分的字号')
@@ -270,7 +386,7 @@ def change_string_reminder(menu:tk.Menu):
     if words is not None:
         if '--no-changes-later' in words:
             words = words.replace('--no-changes-later','')
-            menu.entryconfig(6, state=tk.DISABLED)
+            menu.entryconfig(7, state=tk.DISABLED)
             print('disabled')
 
         clock_string_reminder.set(words)
@@ -318,7 +434,7 @@ def delete_config():
 def save_config_as():
     file = tkinter.filedialog.asksaveasfile(mode='w', defaultextension='.json', filetypes=(('json files', '*.json'),('txt files', '*.txt'),('all files', '*.*')))
     if file is not None:
-        json.dump(clock_data, file, indent=4, ensure_ascii=False)
+        clock_data.saveas(file)
         file.close()
 
 # 后台操作
@@ -383,7 +499,8 @@ def config_clock_color(fg:str,bg:str):
         date_label.config(bg=clock_data['clock_bg_color'])
         reminder_label.config(bg=clock_data['clock_bg_color'])
         clock_frame.config(bg=clock_data['clock_bg_color'])
-    refresh_schedule_color()
+    if window_mode.get() == 3 or window_mode.get() == 4:
+        refresh_schedule_color()
 
 
 # 手动函数
@@ -476,7 +593,7 @@ def put_menu():
     clock_menu.add_separator()
     config_file_menu = tk.Menu(clock_menu, tearoff=0)
     config_file_menu.add_checkbutton(label='退出时保存设置', onvalue=True, offvalue=False, variable=save_config_before_exit)
-    config_file_menu.add_command(label='立即保存配置文件',command=save_config)
+    config_file_menu.add_command(label='立即保存配置文件',command=clock_data.save)
     config_file_menu.add_command(label='配置文件另存为', command=save_config_as)
     # config_file_menu.add_separator()
     # config_file_menu.add_command(label='删除配置文件', command=delete_config,activebackground='red')
@@ -517,11 +634,14 @@ def put_menu():
     view_menu.add_separator()
     view_menu.add_cascade(label='调整字号', menu=font_size_menu)
     view_menu.add_cascade(label='调整配色', menu=clock_color_menu)
+    view_menu.add_command(label='调整窗口透明度', command=change_window_alpha)
     menu_bar.add_cascade(label='显示', menu=view_menu)
     schedule_menu = tk.Menu(menu_bar, tearoff=0)
     schedule_menu.add_radiobutton(label='最大化窗口',variable=window_mode,value=4,command=lambda: config_window_mode(window_mode.get(),view_menu))
     schedule_menu.add_command(label='显示课表',command=place_schedule_frame)
     schedule_menu.add_command(label='隐藏课表',command=remove_schedule_frame)
+    schedule_menu.add_separator()
+    schedule_menu.add_command(label='有关课表的帮助', command=lambda: tkinter.messagebox.showinfo('帮助信息',class_schedule.schedule_help_message))
     menu_bar.add_cascade(label='课表',menu=schedule_menu)
     tools_menu = tk.Menu(menu_bar, tearoff=0)
     tools_menu.add_command(label='随机数生成器',command=show_random)

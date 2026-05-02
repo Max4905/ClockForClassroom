@@ -70,6 +70,9 @@ def ask_number(master: tk.Tk | tk.Toplevel,
 
     # 等待窗口关闭
     w.wait_window()
+    w.bind("<Return>", on_ok)
+    w.bind("<Escape>", on_cancel)
+    w.focus_set()
 
     return result
 
